@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Document Information Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#0b1730;--blue:#2563eb;--light:#f5f7fb;--line:#e5eaf2;--text:#172033;--muted:#64748b;--danger:#dc2626;--green:#15803d}
+*{box-sizing:border-box}body{margin:0;background:var(--light);color:var(--text);font-family:Inter,Arial,sans-serif}
+.container{max-width:1180px;margin:auto;padding:0 18px}
+header{background:linear-gradient(135deg,#0b1730,#1d4ed8);color:white;padding:26px 0}
+.header{display:flex;justify-content:space-between;align-items:center;gap:20px}.brand{display:flex;gap:14px;align-items:center}.logo{font-size:35px}
+h1{margin:0;font-size:29px}h2{margin:0 0 18px}h3{margin:0 0 10px}
+nav{background:white;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.nav{display:flex;gap:4px;overflow:auto}.nav button{border:0;background:none;padding:15px 13px;font-weight:700;color:#334155;cursor:pointer;white-space:nowrap}
+.nav button:hover{color:var(--blue)}
+main{min-height:620px}.page{padding:32px 0}.hidden{display:none!important}
+.hero{background:white;border:1px solid var(--line);border-radius:22px;padding:36px;box-shadow:0 12px 35px #0b17300d;margin-bottom:22px}
+.hero h2{font-size:34px;margin-bottom:8px}.hero p{color:var(--muted);font-size:17px;max-width:760px;line-height:1.7}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:16px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 5px 20px #0b173008}
+.icon{font-size:28px}.muted{color:var(--muted)}.small{font-size:13px;color:var(--muted)}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}.primary{background:var(--blue);color:#fff}.light{background:#eef4ff;color:#1d4ed8}.danger{background:#fee2e2;color:#991b1b}.success{background:#dcfce7;color:#166534}.dark{background:var(--navy);color:#fff}
+.search,input,select,textarea{width:100%;border:1px solid #d8e0eb;border-radius:10px;padding:12px;margin:6px 0 12px;font:inherit}
+.search{padding:14px 16px}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.grow{flex:1}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.url-preview{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#64748b;font-size:12px;margin:8px 0}.pdf-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.notice{border-left:4px solid var(--blue)}footer{background:var(--navy);color:#cbd5e1;padding:28px 0;margin-top:40px}
+.modal{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;padding:18px;z-index:50}
+.modalbox{background:white;border-radius:18px;width:min(680px,100%);max-height:92vh;overflow:auto;padding:24px}
+.close{float:right;border:0;background:#f1f5f9;border-radius:8px;padding:7px 11px;cursor:pointer}
+.msg{padding:11px;border-radius:10px;margin:8px 0}.err{background:#fee2e2;color:#991b1b}.ok{background:#dcfce7;color:#166534}.toast{position:fixed;right:18px;bottom:18px;z-index:100;background:#0b1730;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 10px 30px #0003}.toast.hidden{display:none!important}
+.adminbar{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:18px}
+table{width:100%;border-collapse:collapse;background:#fff}th,td{padding:11px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}th{background:#f8fafc}
+.admin-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.admin-tabs button{border:0;padding:10px 13px;border-radius:9px;background:#eaf0fb;cursor:pointer;font-weight:700}
+@media(max-width:650px){h1{font-size:22px}.hero{padding:24px}.hero h2{font-size:28px}.header{align-items:flex-start}.logo{font-size:28px}}
+</style>
+</head>
+<body>
+<header>
+<div class="container header">
+<div class="brand"><div class="logo">📄</div><div><h1>Document Information Portal</h1><div>नवीनतम सूचना, PDF एवं महत्वपूर्ण जानकारी</div></div></div>
+<button id="adminLoginBtn" class="btn light" onclick="openAdminLogin()">🔐 Admin Login</button>
+<div id="adminLogged" class="hidden row"><span>👑 Admin: mukhiyapanchayat915@gmail.com</span><button class="btn light" onclick="openAdmin()">Admin Panel</button><button class="btn light" onclick="logout()">Logout</button></div>
+</div>
+</header>
+
+<nav><div class="container nav">
+<button onclick="page('home')">🏠 Home</button><button onclick="page('notices')">📢 Latest Notice</button>
+<button onclick="page('documents')">📄 PDF / Documents</button><button onclick="page('info')">📜 घोषणापत्र / जानकारी</button>
+<button onclick="page('team')">👥 Team</button><button onclick="page('links')">🔗 Important Links</button>
+</div></nav>
+
+<main class="container">
+<section id="home" class="page">
+<div class="hero"><h2>स्वागत है</h2><p>यह पोर्टल सरकारी दस्तावेज, आवेदन फॉर्म, गाइड, प्रमाण-पत्र संबंधित दस्तावेज, नवीनतम सूचनाएँ और महत्वपूर्ण links एक ही जगह उपलब्ध कराने के लिए बनाया गया है।</p>
+<div class="grid">
+<div class="card"><div class="icon">📄</div><h3>PDF / Documents</h3><p class="muted">Category के अनुसार दस्तावेज खोजें, देखें और डाउनलोड करें।</p><button class="btn primary" onclick="page('documents')">Documents देखें</button></div>
+<div class="card"><div class="icon">📢</div><h3>Latest Notice</h3><p class="muted">नई और महत्वपूर्ण सूचनाएँ यहाँ मिलेंगी।</p><button class="btn primary" onclick="page('notices')">Notice देखें</button></div>
+<div class="card"><div class="icon">🔎</div><h3>Fast Search</h3><p class="muted">PDF के नाम से तुरंत खोजें।</p></div>
+</div></div>
+</section>
+
+<section id="notices" class="page hidden"><h2>📢 Latest Notice / नवीनतम सूचना</h2><div id="noticeList" class="grid"></div></section>
+
+<section id="documents" class="page hidden">
+<div class="row"><div class="grow"><h2>📄 PDF / Documents</h2></div></div>
+<div class="grid"><div><select id="catFilter" onchange="loadDocs()"><option value="">सभी Categories</option></select></div><div><input id="docSearch" class="search" oninput="renderDocs()" placeholder="🔎 PDF / Document नाम से खोजें"></div></div>
+<div id="docList" class="grid"></div>
+</section>
+
+<section id="info" class="page hidden"><h2>📜 घोषणापत्र / जानकारी</h2><div id="infoList" class="grid"></div></section>
+<section id="team" class="page hidden"><h2>👥 Team</h2><div id="teamList" class="grid"></div></section>
+<section id="links" class="page hidden"><h2>🔗 Important Links</h2><div id="linkList" class="grid"></div></section>
+
+<section id="admin" class="page hidden">
+<div class="adminbar"><div class="row"><div class="grow"><h2>👑 Admin Dashboard</h2><div class="small">केवल Admin इस panel को देख और edit कर सकता है। PDFs, Notices, Information, Team और Links सभी यहीं से manage होंगे।</div></div><button class="btn danger" onclick="logout()">Logout</button></div></div>
+<div class="admin-tabs">
+<button onclick="adminTab('adocs')">📄 PDFs</button><button onclick="adminTab('anotices')">📢 Notices</button>
+<button onclick="adminTab('ainfo')">📜 Information</button><button onclick="adminTab('ateam')">👥 Team</button><button onclick="adminTab('alinks')">🔗 Links</button>
+</div>
+<div id="adminContent"></div>
+<div class="card" style="margin-top:20px"><h3>✅ System Status</h3><p class="small">Database RLS और PDF Storage पहले से configured हैं। Admin यहाँ से सभी content manage कर सकता है।</p></div>
+</section>
+</main>
+
+<footer><div class="container">© 2026 Document Information Portal</div></footer>
+<div id="modal" class="modal hidden"><div class="modalbox"><button class="close" onclick="closeModal()">✕</button><div id="modalContent"></div></div></div><div id="toast" class="toast hidden"></div>
+
+<script>
+const SUPABASE_URL="https://vsgfxwuuicmzxkcythsc.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_yjEdqzbTAyMuNEaqDeyoAw_IUoRmNLw";
+const ADMIN_UID="781557f6-fb4b-4857-bd9d-d01b5e984608";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+let docs=[],cats=[],notices=[],infos=[],teams=[],links=[];
+
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function page(id){document.querySelectorAll("main>section").forEach(x=>x.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");if(id==="documents")loadDocs();if(id==="notices")loadNotices();if(id==="info")loadInfo();if(id==="team")loadTeam();if(id==="links")loadLinks()}
+function modal(html){document.getElementById("modalContent").innerHTML=html;document.getElementById("modal").classList.remove("hidden")}
+function closeModal(){document.getElementById("modal").classList.add("hidden")}
+function msg(t,ok=false){return `<div class="msg ${ok?"ok":"err"}">${esc(t)}</div>`}
+function toast(t){const el=document.getElementById("toast");el.textContent=t;el.classList.remove("hidden");clearTimeout(window.__toastTimer);window.__toastTimer=setTimeout(()=>el.classList.add("hidden"),2200)}
+
+async function isAdmin(){
+ const {data,error}=await sb.auth.getUser();
+ if(error || !data?.user) return false;
+ // Only this exact Supabase Auth UID is allowed to open the Admin Panel.
+ return data.user.id === ADMIN_UID;
+}
+async function refreshAuth(){
+ const {data:{session}}=await sb.auth.getSession();
+ const admin=!!session && await isAdmin();
+ document.getElementById("adminLoginBtn").classList.toggle("hidden",admin);
+ document.getElementById("adminLogged").classList.toggle("hidden",!admin);
+ if(!admin && !document.getElementById("admin").classList.contains("hidden")){page("home");}
+}
+function openAdminLogin(){modal(`<h2>🔐 Admin Login</h2><label>Email</label><input id="ae" type="email" placeholder="Admin email"><label>Password</label><input id="ap" type="password" placeholder="Password"><button class="btn primary" onclick="adminLogin()">Login</button><div id="loginMsg"></div>`)}
+async function adminLogin(){
+ const e=document.getElementById("ae").value.trim(),p=document.getElementById("ap").value;
+ const box=document.getElementById("loginMsg"); if(!e||!p){box.innerHTML=msg("Email और Password भरें");return}
+ const {data,error}=await sb.auth.signInWithPassword({email:e,password:p});
+ if(error){box.innerHTML=msg(error.message);return}
+ if(!(await isAdmin())){await sb.auth.signOut();box.innerHTML=msg("यह account Admin नहीं है। केवल authorized Admin login कर सकता है।");return}
+ closeModal();await refreshAuth();openAdmin();
+}
+async function logout(){await sb.auth.signOut();document.getElementById("admin").classList.add("hidden");page("home");refreshAuth()}
+
+async function openAdmin(){if(!(await isAdmin()))return openAdminLogin();page("admin");adminTab("adocs")}
+function adminTab(tab){
+ if(tab==="adocs")adminDocs();if(tab==="anotices")adminNotices();if(tab==="ainfo")adminInfo();if(tab==="ateam")adminTeam();if(tab==="alinks")adminLinks();
+}
+
+async function loadCats(){
+ const {data,error}=await sb.from("document_categories").select("*").order("name");
+ if(error){console.error(error);cats=[];}else cats=data||[];
+ const s=document.getElementById("catFilter");
+ if(s)s.innerHTML='<option value="">सभी Categories</option>'+cats.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
+}
+function categoryOptions(selected=""){
+ return '<option value="">General / No Category</option>'+cats.map(c=>`<option value="${esc(c.id)}" ${selected===c.id?"selected":""}>${esc(c.name)}</option>`).join("");
+}
+function validHttpUrl(value){try{const u=new URL(value);return u.protocol==="https:"||u.protocol==="http:";}catch{return false;}}
+async function loadDocs(){
+ await loadCats();let q=document.getElementById("docSearch")?.value?.toLowerCase()||"",cid=document.getElementById("catFilter")?.value||"";
+ let query=sb.from("documents").select("id,title,description,category_id,file_url,file_name,created_at,document_categories(name)").eq("is_active",true).order("created_at",{ascending:false});
+ if(cid)query=query.eq("category_id",cid);const {data,error}=await query;
+ if(error){document.getElementById("docList").innerHTML=msg(error.message);return}docs=data||[];
+ renderDocs(q);
+}
+function renderDocs(q){q=q??(document.getElementById("docSearch")?.value?.toLowerCase()||"");let a=docs.filter(x=>String(x.title||"").toLowerCase().includes(q));document.getElementById("docList").innerHTML=a.map(x=>`<div class="card"><span class="badge">${esc(x.document_categories?.name||"PDF")}</span><h3>📄 ${esc(x.title)}</h3><p class="muted">${esc(x.description||"")}</p><div class="actions"><a class="btn primary" href="${esc(x.file_url)}" target="_blank">👁️ View PDF</a><a class="btn light" href="${esc(x.file_url)}" download>⬇️ Download</a></div></div>`).join("")||"<p class='muted'>कोई document नहीं मिला।</p>"}
+
+async function loadNotices(){const {data,error}=await sb.from("notices").select("*").eq("is_active",true).order("notice_date",{ascending:false});if(error){document.getElementById("noticeList").innerHTML=msg(error.message);return}notices=data||[];document.getElementById("noticeList").innerHTML=notices.map(x=>`<div class="card notice"><span class="badge">${esc(x.notice_date||"")}</span><h3>${esc(x.title)}</h3><p>${esc(x.description||"")}</p>${x.pdf_url?`<a class="btn primary" href="${esc(x.pdf_url)}" target="_blank">📄 View PDF</a>`:""}</div>`).join("")||"<p class='muted'>अभी कोई नवीनतम सूचना नहीं है।</p>"}
+async function loadInfo(){const {data}=await sb.from("announcements").select("*").eq("is_active",true).order("created_at",{ascending:false});infos=data||[];document.getElementById("infoList").innerHTML=infos.map(x=>`<div class="card"><h3>${esc(x.title)}</h3><p>${esc(x.content||"")}</p></div>`).join("")||"<p class='muted'>जानकारी उपलब्ध नहीं है।</p>"}
+async function loadTeam(){const {data}=await sb.from("team_members").select("*").eq("is_active",true).order("display_order");teams=data||[];document.getElementById("teamList").innerHTML=teams.map(x=>`<div class="card"><h3>${esc(x.name)}</h3><p class="badge">${esc(x.designation||"")}</p><p>${esc(x.description||"")}</p></div>`).join("")||"<p class='muted'>Team information उपलब्ध नहीं है।</p>"}
+async function loadLinks(){const {data}=await sb.from("important_links").select("*").eq("is_active",true).order("display_order");links=data||[];document.getElementById("linkList").innerHTML=links.map(x=>`<div class="card"><h3>${esc(x.icon||"🔗")} ${esc(x.title)}</h3><p>${esc(x.description||"")}</p><a class="btn primary" href="${esc(x.url)}" target="_blank" rel="noopener">Open Link</a></div>`).join("")||"<p class='muted'>Important links उपलब्ध नहीं हैं।</p>"}
+
+async function adminDocs(){
+ const {data,error}=await sb.from("documents").select("id,title,description,category_id,file_url,file_name,created_at,is_active,document_categories(name)").order("created_at",{ascending:false});
+ let a=document.getElementById("adminContent");
+ if(error){a.innerHTML=msg(error.message);return}
+ a.innerHTML=`<div class="row" style="margin-bottom:14px">
+   <div class="grow"><h3>📄 PDF Documents</h3><div class="small">नाम, URL, category और status Admin सीधे बदल सकता है।</div></div>
+   <button class="btn primary" onclick="docForm()">➕ Add PDF</button>
+ </div>
+ <div class="grid">${(data||[]).map(x=>`
+   <div class="card">
+     <span class="badge">${esc(x.document_categories?.name||"")}</span>
+     <h3>📄 ${esc(x.title)}</h3>
+     <p class="url-preview" title="${esc(x.file_url||"")}">🔗 PDF Link Added</p>
+     <div class="actions">
+       <a class="btn light" href="${esc(x.file_url)}" target="_blank" rel="noopener">👁️ View</a>
+       <button class="btn primary" onclick="editDoc('${x.id}')">✏️ Edit</button>
+       <button class="btn danger" onclick="deleteDoc('${x.id}')">🗑️ Delete</button>
+     </div>
+   </div>`).join("")||"<p>कोई PDF नहीं।</p>"}</div>`;
+}
+function docForm(existing=null){
+ const title=existing?"✏️ PDF Edit करें":"➕ PDF जोड़ें";
+ modal(`<h2>${title}</h2>
+ <label>PDF Name</label><input id="dt" value="${esc(existing?.title||"")}" placeholder="जैसे: मतदाता सूची 01">
+ <label>Description</label><textarea id="dd" placeholder="PDF के बारे में जानकारी">${esc(existing?.description||"")}</textarea>
+ <label>Category</label><select id="dc">${categoryOptions(existing?.category_id||"")}</select>
+ <label>PDF File (Upload)</label><input id="df" type="file" accept="application/pdf">
+ <div style="text-align:center;margin:8px 0;color:#64748b">— या —</div>
+ <label>PDF Link / URL</label><input id="durl" style="font-size:13px" type="url" value="${esc(existing?.file_url||"")}" placeholder="https://.../document.pdf">
+ <div class="small">Admin अपने computer से PDF upload कर सकता है या किसी public PDF का direct URL डाल सकता है।</div>
+ <div id="fm"></div>
+ <button class="btn primary" onclick="${existing?`updateDoc('${existing.id}')`:`saveDoc()`}">${existing?"💾 Update PDF":"💾 Save PDF"}</button>`);
+}
+
+async function editDoc(id){
+ if(!(await isAdmin())) return;
+ const {data,error}=await sb.from("documents").select("id,title,description,category_id,file_url,file_name,is_active").eq("id",id).single();
+ if(error)return alert(error.message);
+ docForm(data);
+}
+
+async function saveDoc(){
+ if(!(await isAdmin()))return;
+ const f=document.getElementById("df").files[0];
+ const pastedUrl=document.getElementById("durl").value.trim();
+ const title=document.getElementById("dt").value.trim();
+ const desc=document.getElementById("dd").value.trim();
+ const cat=document.getElementById("dc").value||null;
+ const fm=document.getElementById("fm");
+ if(!title)return fm.innerHTML=msg("PDF Name आवश्यक है");
+ if(!f && !pastedUrl)return fm.innerHTML=msg("PDF upload करें या PDF link दें");
+ if(pastedUrl && !validHttpUrl(pastedUrl))return fm.innerHTML=msg("सही PDF URL डालें (http/https)");
+ if(f && (f.type!=="application/pdf" && !/\.pdf$/i.test(f.name)))return fm.innerHTML=msg("सिर्फ PDF file upload करें");
+ if(f && f.size>50*1024*1024)return fm.innerHTML=msg("PDF 50 MB से छोटी होनी चाहिए");
+ let url=pastedUrl, fileName=f?.name||"linked-document.pdf";
+ if(f){
+   const folder=cat||"general";
+   const path=`${folder}/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g,"_")}`;
+   const up=await sb.storage.from("aadi").upload(path,f,{contentType:"application/pdf",upsert:false});
+   if(up.error)return fm.innerHTML=msg(up.error.message);
+   url=sb.storage.from("aadi").getPublicUrl(path).data.publicUrl;
+ }
+ const ins=await sb.from("documents").insert({title,description:desc,category_id:cat,file_url:url,file_name:fileName,is_active:true});
+ if(ins.error)return fm.innerHTML=msg(ins.error.message);
+ closeModal();await adminDocs();await loadDocs();toast("PDF successfully saved");
+}
+
+async function updateDoc(id){
+ if(!(await isAdmin()))return;
+ const f=document.getElementById("df").files[0];
+ const pastedUrl=document.getElementById("durl").value.trim();
+ const title=document.getElementById("dt").value.trim();
+ const desc=document.getElementById("dd").value.trim();
+ const cat=document.getElementById("dc").value||null;
+ const fm=document.getElementById("fm");
+ if(!title)return fm.innerHTML=msg("PDF Name आवश्यक है");
+ if(pastedUrl && !validHttpUrl(pastedUrl))return fm.innerHTML=msg("सही PDF URL डालें (http/https)");
+ if(f && (f.type!=="application/pdf" && !/\.pdf$/i.test(f.name)))return fm.innerHTML=msg("सिर्फ PDF file upload करें");
+ if(f && f.size>50*1024*1024)return fm.innerHTML=msg("PDF 50 MB से छोटी होनी चाहिए");
+ const patch={title,description:desc,category_id:cat,is_active:true};
+ if(pastedUrl)patch.file_url=pastedUrl;
+ if(f){
+   const folder=cat||"general";
+   const path=`${folder}/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g,"_")}`;
+   const up=await sb.storage.from("aadi").upload(path,f,{contentType:"application/pdf",upsert:false});
+   if(up.error)return fm.innerHTML=msg(up.error.message);
+   patch.file_url=sb.storage.from("aadi").getPublicUrl(path).data.publicUrl;
+   patch.file_name=f.name;
+ }
+ const r=await sb.from("documents").update(patch).eq("id",id);
+ if(r.error)return fm.innerHTML=msg(r.error.message);
+ closeModal();await adminDocs();await loadDocs();toast("PDF successfully updated");
+}
+
+async function deleteDoc(id){
+ if(!(await isAdmin()))return;
+ if(!confirm("यह PDF record delete करें?"))return;
+ const {error}=await sb.from("documents").delete().eq("id",id);
+ if(error)return alert(error.message);
+ adminDocs();loadDocs();
+}
+
+
+async function adminNotices(){const {data,error}=await sb.from("notices").select("*").order("notice_date",{ascending:false});let a=document.getElementById("adminContent");if(error){a.innerHTML=msg(error.message);return}a.innerHTML=`<div class="row"><h3 class="grow">Notices</h3><button class="btn primary" onclick="noticeForm()">➕ Add Notice</button></div><div class="grid">${(data||[]).map(x=>`<div class="card"><span class="badge">${esc(x.notice_date||"")}</span><h3>${esc(x.title)}</h3><p>${esc(x.description||"")}</p><div class="actions"><button class="btn primary" onclick="noticeForm(${JSON.stringify(x).replace(/"/g,'&quot;')})">✏️ Edit</button><button class="btn danger" onclick="del('notices','${x.id}',adminNotices)">🗑️ Delete</button></div></div>`).join("")||"<p class='muted'>कोई Notice नहीं।</p>"}</div>`}
+function noticeForm(existing=null){modal(`<h2>${existing?"✏️ Notice Edit करें":"➕ Notice"}</h2><label>Title</label><input id="nt" value="${esc(existing?.title||"")}"><label>Description</label><textarea id="nd">${esc(existing?.description||"")}</textarea><label>Date</label><input id="ndate" type="date" value="${esc(existing?.notice_date||"")}"><div id="nm"></div><button class="btn primary" onclick="${existing?`updateNotice('${existing.id}')`:`saveNotice()`}">${existing?"💾 Update":"💾 Save"}</button>`)}
+async function saveNotice(){if(!(await isAdmin()))return;const box=document.getElementById("nm");let r=await sb.from("notices").insert({title:nt.value.trim(),description:nd.value.trim(),notice_date:ndate.value||new Date().toISOString().slice(0,10),is_active:true});if(r.error){box.innerHTML=msg("Notice save नहीं हुआ: "+r.error.message);return;}closeModal();adminNotices();loadNotices();toast("Notice saved")}
+async function updateNotice(id){if(!(await isAdmin()))return;const box=document.getElementById("nm");let r=await sb.from("notices").update({title:nt.value.trim(),description:nd.value.trim(),notice_date:ndate.value||new Date().toISOString().slice(0,10)}).eq("id",id);if(r.error){box.innerHTML=msg("Notice update नहीं हुआ: "+r.error.message);return;}closeModal();adminNotices();loadNotices();toast("Notice updated")}
+
+async function adminInfo(){const {data,error}=await sb.from("announcements").select("*").order("created_at",{ascending:false});let a=document.getElementById("adminContent");if(error){a.innerHTML=msg(error.message);return}a.innerHTML=`<div class="row"><h3 class="grow">घोषणापत्र / जानकारी</h3><button class="btn primary" onclick="infoForm()">➕ Add</button></div><div class="grid">${(data||[]).map(x=>`<div class="card"><h3>${esc(x.title)}</h3><p>${esc(x.content||"")}</p><div class="actions"><button class="btn primary" onclick="infoForm(${JSON.stringify(x).replace(/"/g,'&quot;')})">✏️ Edit</button><button class="btn danger" onclick="del('announcements','${x.id}',adminInfo)">🗑️ Delete</button></div></div>`).join("")||"<p class='muted'>कोई जानकारी नहीं।</p>"}</div>`}
+function infoForm(existing=null){modal(`<h2>${existing?"✏️ Information Edit करें":"➕ Information"}</h2><label>Title</label><input id="it" value="${esc(existing?.title||"")}"><label>Content</label><textarea id="ic" rows="6">${esc(existing?.content||"")}</textarea><div id="im"></div><button class="btn primary" onclick="${existing?`updateInfo('${existing.id}')`:`saveInfo()`}">${existing?"💾 Update":"💾 Save"}</button>`)}
+async function saveInfo(){if(!(await isAdmin()))return;const box=document.getElementById("im");let r=await sb.from("announcements").insert({title:it.value.trim(),content:ic.value.trim(),is_active:true});if(r.error){box.innerHTML=msg("Information save नहीं हुआ: "+r.error.message);return;}closeModal();adminInfo();loadInfo();toast("Information saved")}
+async function updateInfo(id){if(!(await isAdmin()))return;const box=document.getElementById("im");let r=await sb.from("announcements").update({title:it.value.trim(),content:ic.value.trim()}).eq("id",id);if(r.error){box.innerHTML=msg("Information update नहीं हुआ: "+r.error.message);return;}closeModal();adminInfo();loadInfo();toast("Information updated")}
+
+async function adminTeam(){const {data}=await sb.from("team_members").select("*").order("display_order");document.getElementById("adminContent").innerHTML=`<div class="row"><h3 class="grow">Team</h3><button class="btn primary" onclick="teamForm()">➕ Add Member</button></div><div class="grid">${(data||[]).map(x=>`<div class="card"><h3>${esc(x.name)}</h3><p>${esc(x.designation||"")}</p><button class="btn danger" onclick="del('team_members','${x.id}',adminTeam)">Delete</button></div>`).join("")}</div>`}
+function teamForm(){modal(`<h2>➕ Team Member</h2><label>Name</label><input id="tm"><label>Designation</label><input id="td"><label>Description</label><textarea id="tx"></textarea><button class="btn primary" onclick="saveTeam()">Save</button>`)}
+async function saveTeam(){
+ if(!(await isAdmin()))return;
+ let r=await sb.from("team_members").insert({name:tm.value.trim(),designation:td.value.trim(),description:tx.value.trim(),is_active:true});
+ if(r.error){alert("Team member save नहीं हुआ: "+r.error.message);return;}
+ closeModal();adminTeam();loadTeam();
+}
+
+async function adminLinks(){const {data,error}=await sb.from("important_links").select("*").order("display_order");let a=document.getElementById("adminContent");if(error){a.innerHTML=msg(error.message);return}a.innerHTML=`<div class="row"><h3 class="grow">Important Links</h3><button class="btn primary" onclick="linkForm()">➕ Add Link</button></div><div class="grid">${(data||[]).map(x=>`<div class="card"><h3>${esc(x.icon||"🔗")} ${esc(x.title)}</h3><p>${esc(x.description||"")}</p><p class="url-preview">${esc(x.url||"")}</p><div class="actions"><a class="btn light" href="${esc(x.url)}" target="_blank" rel="noopener">Open</a><button class="btn primary" onclick="linkForm(${JSON.stringify(x).replace(/"/g,'&quot;')})">✏️ Edit</button><button class="btn danger" onclick="del('important_links','${x.id}',adminLinks)">🗑️ Delete</button></div></div>`).join("")||"<p class='muted'>कोई Important Link नहीं।</p>"}</div>`}
+function linkForm(existing=null){modal(`<h2>${existing?"✏️ Important Link Edit करें":"➕ Important Link"}</h2><label>Title</label><input id="lt" value="${esc(existing?.title||"")}"><label>URL</label><input id="lu" type="url" value="${esc(existing?.url||"")}" placeholder="https://"><label>Description</label><textarea id="lx">${esc(existing?.description||"")}</textarea><div id="lm"></div><button class="btn primary" onclick="${existing?`updateLink('${existing.id}')`:`saveLink()`}">${existing?"💾 Update":"💾 Save"}</button>`)}
+async function saveLink(){if(!(await isAdmin()))return;const box=document.getElementById("lm");if(!validHttpUrl(lu.value.trim())){box.innerHTML=msg("सही http/https URL डालें");return;}let r=await sb.from("important_links").insert({title:lt.value.trim(),url:lu.value.trim(),description:lx.value.trim(),is_active:true});if(r.error){box.innerHTML=msg("Important Link save नहीं हुआ: "+r.error.message);return;}closeModal();adminLinks();loadLinks();toast("Important Link saved")}
+async function updateLink(id){if(!(await isAdmin()))return;const box=document.getElementById("lm");if(!validHttpUrl(lu.value.trim())){box.innerHTML=msg("सही http/https URL डालें");return;}let r=await sb.from("important_links").update({title:lt.value.trim(),url:lu.value.trim(),description:lx.value.trim()}).eq("id",id);if(r.error){box.innerHTML=msg("Important Link update नहीं हुआ: "+r.error.message);return;}closeModal();adminLinks();loadLinks();toast("Important Link updated")}
+
+async function del(table,id,refresh){if(!(await isAdmin()))return;if(!confirm("Delete करें?"))return;let r=await sb.from(table).delete().eq("id",id);if(r.error)return alert(r.error.message);refresh()}
+
+sb.auth.onAuthStateChange(()=>setTimeout(refreshAuth,100));refreshAuth();loadCats();loadDocs();loadNotices();loadInfo();loadTeam();loadLinks();
+</script>
+</body>
+</html>
